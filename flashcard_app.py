@@ -12,7 +12,14 @@ class FlashcardApp:
         try:
             with open("flashcards.json", "r") as file:
                 self.flashcards = json.load(file)
-        except FileNotFoundError:
+                # Ensure the loaded data is a dictionary
+                if not isinstance(self.flashcards, dict):
+                    raise ValueError("Flashcards data should be a dictionary.")
+                for term, data in self.flashcards.items():
+                    if not isinstance(data, dict) or "definition" not in data:
+                        raise ValueError(f"Flashcard for term '{term}' is improperly formatted.")
+        except (FileNotFoundError, ValueError) as e:
+            print(f"Error loading flashcards: {e}")
             self.flashcards = {}
 
     def save_flashcards(self):
@@ -108,7 +115,7 @@ class FlashcardApp:
         terms = list(self.high_incorrect_flashcards.keys())
         random.shuffle(terms)
 
-        num_flashcards = int(input("How many high incorrect flashcards do you want to review? "))
+        num_flashcards = int(input("How many incorrect flashcards do you want to review? "))
         
         for i in range(min(num_flashcards, len(terms))):
             term = terms[i]
@@ -168,7 +175,10 @@ class FlashcardApp:
             return
         print("\nFlashcards:")
         for term, data in self.flashcards.items():
-            print(f"Term: {term} | Definition: {data['definition']}")
+            if isinstance(data, dict) and "definition" in data:
+                print(f"Term: {term} | Definition: {data['definition']}")
+            else:
+                print(f"Term: {term} | Definition: {data}")  # Fallback for incorrect data structure
 
     def main_menu(self):
         self.load_scores()
@@ -178,7 +188,7 @@ class FlashcardApp:
             print("2. Edit Flashcard")
             print("3. Delete Flashcard")
             print("4. Review Flashcards")
-            print("5. Review High Incorrect Flashcards")
+            print("5. Review Incorrect Flashcards")
             print("6. Take a Quiz")
             print("7. View Scores")
             print("8. List Flashcards")
@@ -205,6 +215,10 @@ class FlashcardApp:
                 break
             else:
                 print("Invalid option. Please try again.")
+
+if __name__ == "__main__":
+    app = FlashcardApp()
+    app.main_menu()
 
 if __name__ == "__main__":
     app = FlashcardApp()
